@@ -1,16 +1,18 @@
+#ifndef GLKIT_IMGUI_APP_HPP_
+#define GLKIT_IMGUI_APP_HPP_
+
 #include <stdio.h>
 #include "imgui/backends/imgui_impl_glfw.h"
 #include "imgui/backends/imgui_impl_opengl3.h"
 #include "imgui/imgui.h"
+
+#include "gl_base.hpp"
 
 #ifndef GL_SILENCE_DEPRECATION
 #define GL_SILENCE_DEPRECATION
 #endif
 #if defined(IMGUI_IMPL_OPENGL_ES2)
 #include <GLES2/gl2.h>
-#endif
-#ifdef _WIN32
-#include <glad/glad.h>
 #endif
 #include <GLFW/glfw3.h>  // Will drag system OpenGL headers
 
@@ -243,3 +245,5 @@ class ImGuiApp {
 };
 
 }  // namespace glkit
+
+#endif  // GLKIT_IMGUI_APP_HPP_
