@@ -1,6 +1,7 @@
 #ifndef GLKIT_GL_BASE_HPP_
 #define GLKIT_GL_BASE_HPP_
 
+#include <math.h>
 #ifdef _WIN32
 #include <glad/glad.h>
 #endif
@@ -83,12 +84,18 @@
 #define GLKIT_USE_GLM
 #ifdef GLKIT_USE_GLM
 #include <glm/glm.hpp>
+#endif  // GLKIT_USE_GLM
 
 namespace glkit {
+
+const float PI = static_cast<float>(acos(-1.0));
+
+#ifdef GLKIT_USE_GLM
 using Vec3 = glm::vec3;
 using Mat4 = glm::mat4;
+#endif  // GLKIT_USE_GLM
+
 }  // namespace glkit
 
-#endif  // GLKIT_USE_GLM
 
 #endif  // GLKIT_GL_BASE_HPP_

@@ -65,9 +65,9 @@ class ImGuiApp {
 #endif
 
     // Create window with graphics context
-    window = glfwCreateWindow(width, height, name, NULL, NULL);
-    if (window == NULL) return -1;
-    glfwMakeContextCurrent(window);
+    window_ = glfwCreateWindow(width, height, name, NULL, NULL);
+    if (window_ == NULL) return -1;
+    glfwMakeContextCurrent(window_);
     glfwSwapInterval(1);  // Enable vsync
 
 #ifdef _WIN32
@@ -91,7 +91,7 @@ class ImGuiApp {
     // ImGui::StyleColorsLight();
 
     // Setup Platform/Renderer backends
-    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplGlfw_InitForOpenGL(window_, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
 
     // Load Fonts
@@ -126,9 +126,9 @@ class ImGuiApp {
 
   void Run() {
     // Main loop
-    while (!glfwWindowShouldClose(window)) {
-      if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
+    while (!glfwWindowShouldClose(window_)) {
+      if (glfwGetKey(window_, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        glfwSetWindowShouldClose(window_, true);
 
       // Poll and handle events (inputs, window resize, etc.)
       // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to
@@ -146,13 +146,13 @@ class ImGuiApp {
       ImGui_ImplGlfw_NewFrame();
       ImGui::NewFrame();
 
-      glfwGetFramebufferSize(window, &window_w_, &window_h_);
+      glfwGetFramebufferSize(window_, &window_w_, &window_h_);
 
       Render();
 
       ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-      glfwSwapBuffers(window);
+      glfwSwapBuffers(window_);
     }
   }
 
@@ -160,7 +160,7 @@ class ImGuiApp {
     // 1. Show the big demo window (Most of the sample code is in
     // ImGui::ShowDemoWindow()! You can browse its code to learn more about
     // Dear ImGui!).
-    if (show_demo_window) ImGui::ShowDemoWindow(&show_demo_window);
+    if (show_demo_window_) ImGui::ShowDemoWindow(&show_demo_window_);
 
     // 2. Show a simple window that we create ourselves. We use a Begin/End
     // pair to create a named window.
@@ -175,14 +175,14 @@ class ImGuiApp {
       ImGui::Text("This is some useful text.");
 
       // Edit bools storing our window open/close state
-      ImGui::Checkbox("Demo Window", &show_demo_window);
-      ImGui::Checkbox("Another Window", &show_another_window);
+      ImGui::Checkbox("Demo Window", &show_demo_window_);
+      ImGui::Checkbox("Another Window", &show_another_window_);
 
       // Edit 1 float using a slider from 0.0f to 1.0f
       ImGui::SliderFloat("float", &f, 0.0f, 1.0f);
 
       // Edit 3 floats representing a color
-      ImGui::ColorEdit3("clear color", (float*)&clear_color);
+      ImGui::ColorEdit3("clear color", (float*)&clear_color_);
 
       // Buttons return true when clicked (most widgets return true when
       // edited/activated)
@@ -196,12 +196,12 @@ class ImGuiApp {
     }
 
     // 3. Show another simple window.
-    if (show_another_window) {
+    if (show_another_window_) {
       // Pass a pointer to our bool variable (the window will have a closing
       // button that will clear the bool when clicked)
-      ImGui::Begin("Another Window", &show_another_window);
+      ImGui::Begin("Another Window", &show_another_window_);
       ImGui::Text("Hello from another window!");
-      if (ImGui::Button("Close Me")) show_another_window = false;
+      if (ImGui::Button("Close Me")) show_another_window_ = false;
       ImGui::End();
     }
   }
@@ -210,7 +210,8 @@ class ImGuiApp {
     RenderDemo();
     ImGui::Render();
     // glViewport(0, 0, window_w_, window_h_);
-    glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
+    glClearColor(clear_color_.x, clear_color_.y, clear_color_.z,
+                 clear_color_.w);
     glClear(GL_COLOR_BUFFER_BIT);
     return 0;
   }
@@ -221,7 +222,7 @@ class ImGuiApp {
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
 
-    glfwDestroyWindow(window);
+    glfwDestroyWindow(window_);
     glfwTerminate();
     return 0;
   }
@@ -230,18 +231,17 @@ class ImGuiApp {
   int window_h() const { return window_h_; }
 
  protected:
-  GLFWwindow* window;
-  int window_w_;
-  int window_h_;
-
- private:
   static void glfw_error_callback(int error, const char* description) {
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
   }
 
-  bool show_demo_window = false;
-  bool show_another_window = false;
-  ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+  GLFWwindow* window_;
+  int window_w_;
+  int window_h_;
+
+  bool show_demo_window_ = false;
+  bool show_another_window_ = false;
+  ImVec4 clear_color_ = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 };
 
 }  // namespace glkit
