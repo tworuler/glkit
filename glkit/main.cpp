@@ -2,6 +2,7 @@
 
 #include "glkit/gl_camera.hpp"
 #include "glkit/gl_shader.hpp"
+#include "glkit/gl_xy_plane.hpp"
 #include "glkit/imgui_app.hpp"
 
 namespace glkit {
@@ -10,6 +11,7 @@ class GLKitApp : public ImGuiApp {
  public:
   int Init(int width = 1280, int height = 720) {
     ImGuiApp::Init(width, height, "GLKit");
+    clear_color_ = ImVec4(0.23, 0.23, 0.23, 1);
 
     // clang-format off
     const char* vs = VERTEX_SHADER(
@@ -28,6 +30,7 @@ class GLKitApp : public ImGuiApp {
       }
     );
     // clang-format on
+    xy_plane_.Init(100);
     shader_.Init(vs, fs);
 
     float vertices[] = {
@@ -41,6 +44,9 @@ class GLKitApp : public ImGuiApp {
     glBindVertexArray(vao_);
     glBindBuffer(GL_ARRAY_BUFFER, vbo_);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
+                          (void*)0);
+    glEnableVertexAttribArray(0);
     glBindVertexArray(0);
 
     return 0;
@@ -54,12 +60,11 @@ class GLKitApp : public ImGuiApp {
     glClearColor(clear_color_.x, clear_color_.y, clear_color_.z,
                  clear_color_.w);
     glClear(GL_COLOR_BUFFER_BIT);
+    xy_plane_.Draw(camera_.projection_mat() * camera_.view_mat());
+
     shader_.Use();
     shader_.SetMat4("mvp", camera_.projection_mat() * camera_.view_mat());
     glBindVertexArray(vao_);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
-                          (void*)0);
-    glEnableVertexAttribArray(0);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     return 0;
   }
@@ -173,6 +178,7 @@ class GLKitApp : public ImGuiApp {
   Shader shader_;
   GLuint vbo_;
   GLuint vao_;
+  XyPlane xy_plane_;
 };
 
 }  // namespace glkit

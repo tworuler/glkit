@@ -1,3 +1,6 @@
+#ifndef GLKIT_GL_SHADER_HPP_
+#define GLKIT_GL_SHADER_HPP_
+
 #include <iostream>
 #include <string>
 
@@ -109,3 +112,5 @@ class Shader {
 };
 
 }  // namespace glkit
+
+#endif  // GLKIT_GL_SHADER_HPP_
