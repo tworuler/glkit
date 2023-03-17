@@ -6,6 +6,18 @@
 #include <glad/glad.h>
 #endif
 
+#if defined(__APPLE__)
+#define GL_SILENCE_DEPRECATION
+#include <OpenGL/OpenGL.h>
+#if CGL_VERSION_1_3
+#include <OpenGL/gl3.h>
+#include <OpenGL/gl3ext.h>
+#else
+#include <OpenGL/gl.h>
+#include <OpenGL/glext.h>
+#endif  // CGL_VERSION_1_3
+#endif
+
 #ifndef LOG
 #define LOG(x) std::cerr << std::endl
 #endif
