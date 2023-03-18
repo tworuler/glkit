@@ -103,12 +103,34 @@ class Mesh {
     return ret;
   }
 
-  void Draw(const Shader& shader) {
-    shader.Use();
+  int Draw(const Shader* shader) {
+    int ret = shader->Use();
+    if (ret != 0) {
+      LOG(ERROR) << "Failed to use shader";
+      return -1;
+    }
+
     glBindVertexArray(vao_);
     glDrawElements(GL_TRIANGLES, indices_.size(), GL_UNSIGNED_INT,
                    static_cast<void*>(0));
     glBindVertexArray(0);
+    RETURN_IF_GL_ERROR(-1, "Failed to draw mesh");
+    return 0;
+  }
+
+  void Free() {
+    if (vao_) {
+      glDeleteVertexArrays(1, &vao_);
+      vao_ = 0;
+    }
+    if (vbo_) {
+      glDeleteBuffers(1, &vbo_);
+      vbo_ = 0;
+    }
+    if (ebo_) {
+      glDeleteBuffers(1, &ebo_);
+      ebo_ = 0;
+    }
   }
 
  private:

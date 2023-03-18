@@ -2,7 +2,9 @@
 
 #include "glkit/gl_camera.hpp"
 #include "glkit/gl_mesh.hpp"
+#include "glkit/gl_mesh_manager.hpp"
 #include "glkit/gl_shader.hpp"
+#include "glkit/gl_shader_manager.hpp"
 #include "glkit/gl_square.hpp"
 #include "glkit/gl_xy_plane.hpp"
 #include "glkit/imgui_app.hpp"
@@ -15,10 +17,19 @@ class GLKitApp : public ImGuiApp {
     ImGuiApp::Init(width, height, "GLKit");
     clear_color_ = ImVec4(0.23, 0.23, 0.23, 1);
 
-    xy_plane_.Init(100);
+    auto shader = shader_manager_.AddShaderFromFile(
+        "xy_plane", "shaders/xy_plane.vs", "shaders/xy_plane.fs");
+    xy_plane_.Init(shader, 100);
+
     square_.Init();
-    mesh_.InitFromObjFile("objects/sphere.obj");
-    mesh_shader_.InitFromFile("shaders/mesh.vs", "shaders/mesh.fs");
+
+    light_ = mesh_manager_.AddMeshFromObjFile("light", "objects/sphere.obj");
+    light_shader_ = shader_manager_.AddShaderFromFile(
+        "light", "shaders/light.vs", "shaders/light.fs");
+
+    mesh_ = mesh_manager_.AddMeshFromObjFile("mesh", "objects/sphere.obj");
+    mesh_shader_ = shader_manager_.AddShaderFromFile(
+        "mesh", "shaders/mesh.vs", "shaders/mesh.fs");
     glEnable(GL_DEPTH_TEST);
 
     return 0;
@@ -35,17 +46,19 @@ class GLKitApp : public ImGuiApp {
     xy_plane_.Draw(camera_.projection_mat() * camera_.view_mat());
     // square_.Draw(camera_.projection_mat() * camera_.view_mat());
 
-    mesh_shader_.Use();
-    mesh_shader_.SetMat4("mvp", camera_.projection_mat() * camera_.view_mat());
-    mesh_.Draw(mesh_shader_);
+    light_shader_->Use();
+    light_shader_->SetMat4("mvp", camera_.projection_mat() * camera_.view_mat());
+    light_->Draw(light_shader_);
+
+    mesh_shader_->Use();
+    mesh_shader_->SetMat4("mvp", camera_.projection_mat() * camera_.view_mat());
+    mesh_->Draw(mesh_shader_);
     return 0;
   }
 
  private:
   void UiAddCamera() {
     ImGui::Begin("Camera");
-    ImGui::GetFont()->Scale *= 1.2f;
-    ImGui::PushFont(ImGui::GetFont());
 
     Vec3 position = camera_.position();
     ImGui::InputFloat("PositionX", &position.x, 1.f, 10.f, "%.1f");
@@ -110,9 +123,6 @@ class GLKitApp : public ImGuiApp {
       ImGui::TreePop();
     }
 
-    ImGui::GetFont()->Scale /= 1.2f;
-    ImGui::PopFont();
-
     ImGui::End();
 
     const auto& io = ImGui::GetIO();
@@ -147,10 +157,14 @@ class GLKitApp : public ImGuiApp {
   }
 
   Camera camera_;
+  ShaderManager shader_manager_;
+  MeshManager mesh_manager_;
   XyPlane xy_plane_;
   Square square_;
-  Mesh mesh_;
-  Shader mesh_shader_;
+  Mesh* mesh_;
+  Shader* mesh_shader_;
+  Mesh* light_;
+  Shader* light_shader_;
 };
 
 }  // namespace glkit

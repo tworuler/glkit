@@ -12,6 +12,8 @@ namespace glkit {
 
 class Shader {
  public:
+  Shader() = default;
+
   int Init(const std::string& vertex_src, const std::string& fragment_src) {
     int ret = 0;
     GLuint vertex_shader = 0;
@@ -52,42 +54,61 @@ class Shader {
     return Init(vertex_src, fragment_src);
   }
 
-  void Use() const {
+  int Use() const {
     glUseProgram(program_);
-    CHECK_GL_ERROR("glUseProgram");
+    RETURN_IF_GL_ERROR(-1, "glUseProgram");
+    return 0;
   }
 
-  void SetInt(const char* name, int value) {
+  int SetInt(const char* name, int value) {
     auto loc = glGetUniformLocation(program_, name);
     glUniform1i(loc, value);
-    CHECK_GL_ERROR("glUniform1i");
+    GLenum err = glGetError();
+    RETURN_IF_GL_ERROR(-1, "glUniform1i " << name);
+    return 0;
   }
 
-  void SetFloat(const char* name, float value) {
+  int SetFloat(const char* name, float value) {
     auto loc = glGetUniformLocation(program_, name);
     glUniform1f(loc, value);
-    CHECK_GL_ERROR("glUniform1f");
+    RETURN_IF_GL_ERROR(-1, "glUniform1f " << name);
+    return 0;
   }
 
-  void SetVec3(const char* name, const Vec3& value) {
+  int SetVec3(const char* name, const Vec3& value) {
     auto loc = glGetUniformLocation(program_, name);
     glUniform3fv(loc, 1, &value[0]);
-    CHECK_GL_ERROR("glUniform3fv");
+    RETURN_IF_GL_ERROR(-1, "glUniform3fv " << name);
+    return 0;
   }
 
-  void SetVec3(const char* name, float x, float y, float z) {
+  int SetVec3(const char* name, float x, float y, float z) {
     auto loc = glGetUniformLocation(program_, name);
     glUniform3f(loc, x, y, z);
-    CHECK_GL_ERROR("glUniform3f");
+    RETURN_IF_GL_ERROR(-1, "glUniform3f " << name);
+    return 0;
   }
 
-  void SetMat4(const char* name, const Mat4& value, bool row_major = false) {
+  int SetMat4(const char* name, const Mat4& value, bool row_major = false) {
     auto loc = glGetUniformLocation(program_, name);
     glUniformMatrix4fv(loc, 1, row_major, &value[0][0]);
-    CHECK_GL_ERROR("glUniformMatrix4fv");
+    RETURN_IF_GL_ERROR(-1, "glUniformMatrix4fv " << name);
+    return 0;
   }
 
+  void Free() {
+    if (program_ != 0) {
+      glDeleteProgram(program_);
+      program_ = 0;
+    }
+  }
+
+  ~Shader() { Free(); }
+
  private:
+  Shader(const Shader&) = delete;
+  Shader& operator=(const Shader&) = delete;
+
   int CompileShader(GLenum shader_type, const std::string& shader_source,
                     GLuint* shader) {
     *shader = glCreateShader(shader_type);

@@ -10,9 +10,11 @@ namespace glkit {
 
 class XyPlane {
  public:
-  void Init(int size = 100) {
+  XyPlane() = default;
+
+  void Init(Shader* shader, int size = 100) {
+    shader_ = shader;
     size_ = size;
-    shader_.Init(vs_, fs_);
 
     std::vector<float> v;
     for (int x = -size; x < size; x++) {
@@ -28,11 +30,10 @@ class XyPlane {
       v.push_back(static_cast<float>(y));
     }
 
-    GLuint vbo = 0;
-    glGenBuffers(1, &vbo);
+    glGenBuffers(1, &vbo_);
     glGenVertexArrays(1, &vao_);
     glBindVertexArray(vao_);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo_);
     glBufferData(GL_ARRAY_BUFFER, sizeof(float) * v.size(), v.data(),
                  GL_STATIC_DRAW);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
@@ -40,44 +41,48 @@ class XyPlane {
     glBindVertexArray(0);
   }
 
-  void Draw(const Mat4& mvp) {
-    shader_.Use();
-    shader_.SetMat4("mvp", mvp);
+  int Draw(const Mat4& mvp) {
+    int ret = 0;
+    ret = shader_->Use();
+    if (ret != 0) {
+      LOG(ERROR) << "Failed to use shader";
+      return ret;
+    }
+
+    ret = shader_->SetMat4("mvp", mvp);
+    if (ret != 0) {
+      LOG(ERROR) << "Failed to set mvp";
+      return ret;
+    }
+
     glBindVertexArray(vao_);
     glDrawArrays(GL_LINES, 0, size_ * 8);
+    glBindVertexArray(0);
+    RETURN_IF_GL_ERROR(-1, "Failed to draw xy plane");
+    return ret;
   }
 
+  void Free() {
+    if (vao_ != 0) {
+      glDeleteVertexArrays(1, &vao_);
+      vao_ = 0;
+    }
+    if (vbo_ != 0) {
+      glDeleteBuffers(1, &vbo_);
+      vbo_ = 0;
+    }
+  }
+
+  ~XyPlane() { Free(); }
+
  private:
+  XyPlane(const XyPlane&) = delete;
+  const XyPlane& operator=(const XyPlane&) = delete;
+
   int size_ = 0;
-  Shader shader_;
+  Shader* shader_ = nullptr;
   GLuint vao_ = 0;
-
-  // clang-format off
-  const char* vs_ = VERTEX_SHADER(
-      uniform mat4 mvp;
-      in vec3 pos;
-      out vec3 p; 
-
-      void main() {
-        p = pos;
-        gl_Position = mvp * vec4(pos, 1.0);
-      }
-  );
-
-  const char* fs_ = FRAGMENT_SHADER(
-      in vec3 p;
-
-      void main() {
-        if (p.x == 0) {
-          gl_FragColor = vec4(0.3, 0.54, 0.15, 1.0);
-        } else if (p.y == 0) {
-          gl_FragColor = vec4(0.56, 0.24, 0.28, 1.0);
-        } else {
-          gl_FragColor = vec4(0.3, 0.3, 0.3, 1.0);
-        }
-      }
-  );
-  // clang-format on
+  GLuint vbo_ = 0;
 };
 
 }  // namespace glkit

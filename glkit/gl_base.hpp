@@ -18,6 +18,8 @@
 #endif  // CGL_VERSION_1_3
 #endif
 
+#include "cb/logging.hpp"
+
 #ifndef LOG
 #define LOG(x) std::cerr << std::endl
 #endif
@@ -28,6 +30,16 @@
     if (error != GL_NO_ERROR) {                                           \
       LOG(ERROR) << msg << ": GL error: 0x" << std::uppercase << std::hex \
                  << error;                                                \
+    }                                                                     \
+  } while (0)
+
+#define RETURN_IF_GL_ERROR(ret, msg)                                      \
+  do {                                                                    \
+    GLenum error = glGetError();                                          \
+    if (error != GL_NO_ERROR) {                                           \
+      LOG(ERROR) << msg << ": GL error: 0x" << std::uppercase << std::hex \
+                 << error;                                                \
+      return ret;                                                         \
     }                                                                     \
   } while (0)
 
@@ -109,6 +121,5 @@ using Mat4 = glm::mat4;
 #endif  // GLKIT_USE_GLM
 
 }  // namespace glkit
-
 
 #endif  // GLKIT_GL_BASE_HPP_

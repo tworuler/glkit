@@ -10,6 +10,7 @@ include_directories(${PROJECT_SOURCE_DIR}/third_party/imgui)
 include_directories(${PROJECT_SOURCE_DIR}/third_party/glfw/include)
 include_directories(${PROJECT_SOURCE_DIR}/third_party/glad/include)
 include_directories(${PROJECT_SOURCE_DIR}/third_party/glm)
+include_directories(${PROJECT_SOURCE_DIR}/third_party/cppbase)
 
 if (MSVC)
 add_subdirectory(${PROJECT_SOURCE_DIR}/third_party/glad)
