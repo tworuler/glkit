@@ -1,7 +1,9 @@
 #include <algorithm>
 
 #include "glkit/gl_camera.hpp"
+#include "glkit/gl_mesh.hpp"
 #include "glkit/gl_shader.hpp"
+#include "glkit/gl_square.hpp"
 #include "glkit/gl_xy_plane.hpp"
 #include "glkit/imgui_app.hpp"
 
@@ -13,41 +15,11 @@ class GLKitApp : public ImGuiApp {
     ImGuiApp::Init(width, height, "GLKit");
     clear_color_ = ImVec4(0.23, 0.23, 0.23, 1);
 
-    // clang-format off
-    const char* vs = VERTEX_SHADER(
-      uniform mat4 mvp;
-
-      in vec3 pos;
-
-      void main() {
-        gl_Position = mvp * vec4(pos, 1.0);
-      }
-    );
-
-    const char* fs = FRAGMENT_SHADER(
-      void main() {
-        gl_FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);
-      }
-    );
-    // clang-format on
     xy_plane_.Init(100);
-    shader_.Init(vs, fs);
-
-    float vertices[] = {
-        -0.5f, -0.5f, 0.0f,  // 左下
-        -0.5f, 0.5f,  0.0f,  // 左上
-        0.5f,  -0.5f, 0.0f,  // 右下
-        0.5f,  0.5f,  0.0f,  // 右上
-    };
-    glGenBuffers(1, &vbo_);
-    glGenVertexArrays(1, &vao_);
-    glBindVertexArray(vao_);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo_);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
-                          (void*)0);
-    glEnableVertexAttribArray(0);
-    glBindVertexArray(0);
+    square_.Init();
+    mesh_.InitFromObjFile("objects/sphere.obj");
+    mesh_shader_.InitFromFile("shaders/mesh.vs", "shaders/mesh.fs");
+    glEnable(GL_DEPTH_TEST);
 
     return 0;
   }
@@ -59,13 +31,13 @@ class GLKitApp : public ImGuiApp {
 
     glClearColor(clear_color_.x, clear_color_.y, clear_color_.z,
                  clear_color_.w);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     xy_plane_.Draw(camera_.projection_mat() * camera_.view_mat());
+    // square_.Draw(camera_.projection_mat() * camera_.view_mat());
 
-    shader_.Use();
-    shader_.SetMat4("mvp", camera_.projection_mat() * camera_.view_mat());
-    glBindVertexArray(vao_);
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    mesh_shader_.Use();
+    mesh_shader_.SetMat4("mvp", camera_.projection_mat() * camera_.view_mat());
+    mesh_.Draw(mesh_shader_);
     return 0;
   }
 
@@ -175,10 +147,10 @@ class GLKitApp : public ImGuiApp {
   }
 
   Camera camera_;
-  Shader shader_;
-  GLuint vbo_;
-  GLuint vao_;
   XyPlane xy_plane_;
+  Square square_;
+  Mesh mesh_;
+  Shader mesh_shader_;
 };
 
 }  // namespace glkit

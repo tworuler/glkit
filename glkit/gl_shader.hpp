@@ -1,7 +1,9 @@
 #ifndef GLKIT_GL_SHADER_HPP_
 #define GLKIT_GL_SHADER_HPP_
 
+#include <fstream>
 #include <iostream>
+#include <sstream>
 #include <string>
 
 #include "gl_base.hpp"
@@ -25,7 +27,32 @@ class Shader {
     return ret;
   }
 
-  void Use() {
+  int InitFromFile(const std::string& vertex_file,
+                   const std::string& fragment_file) {
+    std::ifstream fin(vertex_file);
+    if (!fin.is_open()) {
+      LOG(ERROR) << "Failed to open file: " << vertex_file;
+      return -1;
+    }
+    std::stringstream vertex_ss;
+    vertex_ss << fin.rdbuf();
+    fin.close();
+    std::string vertex_src = vertex_ss.str();
+
+    fin.open(fragment_file);
+    if (!fin.is_open()) {
+      LOG(ERROR) << "Failed to open file: " << fragment_file;
+      return -1;
+    }
+    std::stringstream fragment_ss;
+    fragment_ss << fin.rdbuf();
+    fin.close();
+    std::string fragment_src = fragment_ss.str();
+
+    return Init(vertex_src, fragment_src);
+  }
+
+  void Use() const {
     glUseProgram(program_);
     CHECK_GL_ERROR("glUseProgram");
   }
@@ -54,8 +81,7 @@ class Shader {
     CHECK_GL_ERROR("glUniform3f");
   }
 
-  void SetMat4(const char* name, const Mat4& value,
-               bool row_major = false) {
+  void SetMat4(const char* name, const Mat4& value, bool row_major = false) {
     auto loc = glGetUniformLocation(program_, name);
     glUniformMatrix4fv(loc, 1, row_major, &value[0][0]);
     CHECK_GL_ERROR("glUniformMatrix4fv");
