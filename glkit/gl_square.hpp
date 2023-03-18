@@ -60,7 +60,6 @@ class Square {
   Shader shader_;
   GLuint vao_ = 0;
   GLuint vbo_ = 0;
-  GLuint ebo_ = 0;
 };
 
 }  // namespace glkit

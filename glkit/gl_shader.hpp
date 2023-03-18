@@ -62,14 +62,15 @@ class Shader {
 
   int SetInt(const char* name, int value) {
     auto loc = glGetUniformLocation(program_, name);
+    LOG_IF(WARN, loc == -1) << "Uniform " << name << " not found";
     glUniform1i(loc, value);
-    GLenum err = glGetError();
     RETURN_IF_GL_ERROR(-1, "glUniform1i " << name);
     return 0;
   }
 
   int SetFloat(const char* name, float value) {
     auto loc = glGetUniformLocation(program_, name);
+    LOG_IF(WARN, loc == -1) << "Uniform " << name << " not found";
     glUniform1f(loc, value);
     RETURN_IF_GL_ERROR(-1, "glUniform1f " << name);
     return 0;
@@ -77,6 +78,7 @@ class Shader {
 
   int SetVec3(const char* name, const Vec3& value) {
     auto loc = glGetUniformLocation(program_, name);
+    LOG_IF(WARN, loc == -1) << "Uniform " << name << " not found";
     glUniform3fv(loc, 1, &value[0]);
     RETURN_IF_GL_ERROR(-1, "glUniform3fv " << name);
     return 0;
@@ -84,6 +86,7 @@ class Shader {
 
   int SetVec3(const char* name, float x, float y, float z) {
     auto loc = glGetUniformLocation(program_, name);
+    LOG_IF(WARN, loc == -1) << "Uniform " << name << " not found";
     glUniform3f(loc, x, y, z);
     RETURN_IF_GL_ERROR(-1, "glUniform3f " << name);
     return 0;
@@ -91,6 +94,7 @@ class Shader {
 
   int SetMat4(const char* name, const Mat4& value, bool row_major = false) {
     auto loc = glGetUniformLocation(program_, name);
+    LOG_IF(WARN, loc == -1) << "Uniform " << name << " not found";
     glUniformMatrix4fv(loc, 1, row_major, &value[0][0]);
     RETURN_IF_GL_ERROR(-1, "glUniformMatrix4fv " << name);
     return 0;

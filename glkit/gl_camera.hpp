@@ -108,12 +108,12 @@ class Camera {
     is_projection_dirty_ = false;
   }
 
-  Vec3 position_ = Vec3(0.f, 0.f, 1.f);
+  Vec3 position_ = Vec3(0.f, 0.f, 10.f);
   float pitch_ = 0.f;                    // x in [-PI/2, PI/2]
   float yaw_ = -90.f / 180.f * PI;       // y in [-PI, PI]
   Vec3 world_up_ = Vec3(0.f, 1.f, 0.f);  // normalized vector
 
-  float fovy_ = 45.f / 180.f * PI;
+  float fovy_ = 90.f / 180.f * PI;
   float aspect_ = 16.f / 9.f;  // widht / hieght
   float near_ = 0.1f;
   float far_ = 100.f;

@@ -3,6 +3,7 @@
 #include "glkit/gl_camera.hpp"
 #include "glkit/gl_mesh.hpp"
 #include "glkit/gl_mesh_manager.hpp"
+#include "glkit/gl_model.hpp"
 #include "glkit/gl_shader.hpp"
 #include "glkit/gl_shader_manager.hpp"
 #include "glkit/gl_square.hpp"
@@ -13,50 +14,89 @@ namespace glkit {
 
 class GLKitApp : public ImGuiApp {
  public:
-  int Init(int width = 1280, int height = 720) {
-    ImGuiApp::Init(width, height, "GLKit");
+  int Init(int width = 1280, int height = 720,
+           const char* name = "GLKit") override {
+    ImGuiApp::Init(width, height, name);
     clear_color_ = ImVec4(0.23, 0.23, 0.23, 1);
 
-    auto shader = shader_manager_.AddShaderFromFile(
+    auto cube_mesh =
+        mesh_manager_.AddMeshFromObjFile("cube", "objects/cube.obj");
+    auto sphere_mesh =
+        mesh_manager_.AddMeshFromObjFile("sphere", "objects/sphere.obj");
+    auto monkey_mesh =
+        mesh_manager_.AddMeshFromObjFile("monkey", "objects/monkey.obj");
+
+    auto xy_plane_shader = shader_manager_.AddShaderFromFile(
         "xy_plane", "shaders/xy_plane.vs", "shaders/xy_plane.fs");
-    xy_plane_.Init(shader, 100);
+    auto light_shader = shader_manager_.AddShaderFromFile(
+        "light", "shaders/light.vs", "shaders/light.fs");
+    auto mesh_shader = shader_manager_.AddShaderFromFile(
+        "mesh", "shaders/mesh.vs", "shaders/mesh.fs");
 
     square_.Init();
+    xy_plane_.Init(xy_plane_shader, 100);
+    light_.Init(sphere_mesh, light_shader, true);
+    cube_.Init(cube_mesh, mesh_shader);
+    sphere_.Init(sphere_mesh, mesh_shader);
+    monkey_.Init(monkey_mesh, mesh_shader);
 
-    light_ = mesh_manager_.AddMeshFromObjFile("light", "objects/sphere.obj");
-    light_shader_ = shader_manager_.AddShaderFromFile(
-        "light", "shaders/light.vs", "shaders/light.fs");
-
-    mesh_ = mesh_manager_.AddMeshFromObjFile("mesh", "objects/sphere.obj");
-    mesh_shader_ = shader_manager_.AddShaderFromFile(
-        "mesh", "shaders/mesh.vs", "shaders/mesh.fs");
     glEnable(GL_DEPTH_TEST);
 
     return 0;
   }
 
   int Render() override {
-    RenderDemo();
-    UiAddCamera();
+    RenderUi();
     ImGui::Render();
 
     glClearColor(clear_color_.x, clear_color_.y, clear_color_.z,
                  clear_color_.w);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    xy_plane_.Draw(camera_.projection_mat() * camera_.view_mat());
-    // square_.Draw(camera_.projection_mat() * camera_.view_mat());
+    if (show_xy_plane_)
+      xy_plane_.Draw(camera_.projection_mat() * camera_.view_mat());
+    if (show_light_) light_.Draw(camera_.view_mat(), camera_.projection_mat());
+    if (show_square_)
+      square_.Draw(camera_.projection_mat() * camera_.view_mat());
+    if (show_cube_) {
+      cube_.SetLight(light_.position(), light_.color());
+      cube_.Draw(camera_.view_mat(), camera_.projection_mat());
+    }
+    if (show_sphere_) {
+      sphere_.SetLight(light_.position(), light_.color());
+      sphere_.Draw(camera_.view_mat(), camera_.projection_mat());
+    }
+    if (show_monkey_) {
+      monkey_.SetLight(light_.position(), light_.color());
+      monkey_.Draw(camera_.view_mat(), camera_.projection_mat());
+    }
 
-    light_shader_->Use();
-    light_shader_->SetMat4("mvp", camera_.projection_mat() * camera_.view_mat());
-    light_->Draw(light_shader_);
-
-    mesh_shader_->Use();
-    mesh_shader_->SetMat4("mvp", camera_.projection_mat() * camera_.view_mat());
-    mesh_->Draw(mesh_shader_);
     return 0;
   }
 
  private:
+  void RenderUi() {
+    ImGui::Begin("GLKit");
+    ImGui::Checkbox("ImGui Demo Window", &show_demo_window_);
+    ImGui::Text("average %.3f ms/frame (%.1f FPS)",
+                1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+    ImGui::ColorEdit3("Clear Color", (float*)&clear_color_);
+    ImGui::Checkbox("Show XY Plane", &show_xy_plane_);
+    ImGui::Checkbox("Show Camera", &show_camera_);
+    ImGui::Checkbox("Show Light", &show_light_);
+    ImGui::Checkbox("Show Cube", &show_cube_);
+    ImGui::Checkbox("Show Sphere", &show_sphere_);
+    ImGui::Checkbox("Show Square", &show_square_);
+    ImGui::Checkbox("Show Monkey", &show_monkey_);
+    ImGui::End();
+
+    if (show_demo_window_) ImGui::ShowDemoWindow(&show_demo_window_);
+    if (show_camera_) UiAddCamera();
+    if (show_light_) UiAddModel("Light", &light_);
+    if (show_cube_) UiAddModel("Cube", &cube_);
+    if (show_sphere_) UiAddModel("Sphere", &sphere_);
+    if (show_monkey_) UiAddModel("Monkey", &monkey_);
+  }
+
   void UiAddCamera() {
     ImGui::Begin("Camera");
 
@@ -93,9 +133,9 @@ class GLKitApp : public ImGuiApp {
       const Vec3& f = camera_.front();
       const Vec3& r = camera_.right();
       const Vec3& u = camera_.up();
-      ImGui::Text("Front(-Z): %8.3f %8.3f %8.3f", f.x, f.y, f.z);
-      ImGui::Text("Right(+X): %8.3f %8.3f %8.3f", r.x, r.y, r.z);
-      ImGui::Text("   Up(+Y): %8.3f %8.3f %8.3f", u.x, u.y, u.z);
+      ImGui::Text("Front(-Z): %6.3f %6.3f %6.3f", f.x, f.y, f.z);
+      ImGui::Text("Right(+X): %6.3f %6.3f %6.3f", r.x, r.y, r.z);
+      ImGui::Text("   Up(+Y): %6.3f %6.3f %6.3f", u.x, u.y, u.z);
       ImGui::TreePop();
     }
 
@@ -103,10 +143,10 @@ class GLKitApp : public ImGuiApp {
       const Mat4& view_mat = camera_.view_mat();
       for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 3; j++) {
-          ImGui::Text("%8.3f", view_mat[j][i]);
+          ImGui::Text("%6.3f", view_mat[j][i]);
           ImGui::SameLine();
         }
-        ImGui::Text("%8.3f", view_mat[3][i]);
+        ImGui::Text("%6.3f", view_mat[3][i]);
       }
       ImGui::TreePop();
     }
@@ -115,10 +155,10 @@ class GLKitApp : public ImGuiApp {
       const Mat4& projection_mat = camera_.projection_mat();
       for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 3; j++) {
-          ImGui::Text("%8.3f", projection_mat[j][i]);
+          ImGui::Text("%6.3f", projection_mat[j][i]);
           ImGui::SameLine();
         }
-        ImGui::Text("%8.3f", projection_mat[3][i]);
+        ImGui::Text("%6.3f", projection_mat[3][i]);
       }
       ImGui::TreePop();
     }
@@ -156,15 +196,58 @@ class GLKitApp : public ImGuiApp {
     }
   }
 
+  void UiAddModel(const char* name, Model* model) {
+    ImGui::Begin(name);
+    Vec3 color = model->color();
+    ImGui::ColorEdit3("Color", &color.x);
+    model->set_color(color);
+    Vec3 position = model->position();
+    ImGui::InputFloat("PX", &position.x, 0.1f, 1.f, "%.1f");
+    ImGui::InputFloat("PY", &position.y, 0.1f, 1.f, "%.1f");
+    ImGui::InputFloat("PZ", &position.z, 0.1f, 1.f, "%.1f");
+    model->set_position(position);
+    Vec3 rotation = model->rotation() / PI * 180.f;
+    ImGui::InputFloat("RX", &rotation.x, 1.f, 10.f, "%.1f");
+    ImGui::InputFloat("RY", &rotation.y, 1.f, 10.f, "%.1f");
+    ImGui::InputFloat("RZ", &rotation.z, 1.f, 10.f, "%.1f");
+    model->set_rotation(rotation / 180.f * PI);
+    Vec3 scale = model->scale();
+    ImGui::InputFloat("SX", &scale.x, 0.1f, 1.f, "%.1f");
+    ImGui::InputFloat("SY", &scale.y, 0.1f, 1.f, "%.1f");
+    ImGui::InputFloat("SZ", &scale.z, 0.1f, 1.f, "%.1f");
+    model->set_scale(scale);
+
+    if (ImGui::TreeNode("Model Matrix")) {
+      const Mat4& model_mat = model->GetModelMatrix();
+      for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 3; j++) {
+          ImGui::Text("%6.3f", model_mat[j][i]);
+          ImGui::SameLine();
+        }
+        ImGui::Text("%6.3f", model_mat[3][i]);
+      }
+      ImGui::TreePop();
+    }
+    ImGui::End();
+  }
+
   Camera camera_;
   ShaderManager shader_manager_;
   MeshManager mesh_manager_;
   XyPlane xy_plane_;
   Square square_;
-  Mesh* mesh_;
-  Shader* mesh_shader_;
-  Mesh* light_;
-  Shader* light_shader_;
+  Model light_;
+  Model cube_;
+  Model sphere_;
+  Model monkey_;
+
+  bool show_xy_plane_ = true;
+  bool show_camera_ = true;
+  bool show_light_ = true;
+  bool show_cube_ = true;
+  bool show_square_ = false;
+  bool show_sphere_ = false;
+  bool show_monkey_ = false;
 };
 
 }  // namespace glkit

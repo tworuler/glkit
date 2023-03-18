@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.10)
 project(glkit)
 
 set(CMAKE_CXX_STANDARD 11)
+add_compile_options(-Wall)
 
 include_directories(${PROJECT_SOURCE_DIR})
 include_directories(${PROJECT_SOURCE_DIR}/third_party)
