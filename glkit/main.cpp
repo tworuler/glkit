@@ -14,7 +14,7 @@ namespace glkit {
 
 class GLKitApp : public ImGuiApp {
  public:
-  int Init(int width = 1280, int height = 720,
+  int Init(int width = 1920, int height = 1080,
            const char* name = "GLKit") override {
     ImGuiApp::Init(width, height, name);
     clear_color_ = ImVec4(0.23, 0.23, 0.23, 1);
@@ -49,6 +49,7 @@ class GLKitApp : public ImGuiApp {
     RenderUi();
     ImGui::Render();
 
+    glViewport(0, 0, window_w_, window_h_);
     glClearColor(clear_color_.x, clear_color_.y, clear_color_.z,
                  clear_color_.w);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -79,6 +80,7 @@ class GLKitApp : public ImGuiApp {
     ImGui::Checkbox("ImGui Demo Window", &show_demo_window_);
     ImGui::Text("average %.3f ms/frame (%.1f FPS)",
                 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+    ImGui::Text("Window Size(WxH): %dx%d", window_w_, window_h_);
     ImGui::ColorEdit3("Clear Color", (float*)&clear_color_);
     ImGui::Checkbox("Show XY Plane", &show_xy_plane_);
     ImGui::Checkbox("Show Camera", &show_camera_);
