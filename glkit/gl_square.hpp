@@ -56,6 +56,14 @@ class Square {
     glBindVertexArray(0);
   }
 
+  void Free() {
+    glDeleteVertexArrays(1, &vao_);
+    glDeleteBuffers(1, &vbo_);
+    shader_.Free();
+  }
+
+  ~Square() { Free(); }
+
  private:
   Shader shader_;
   GLuint vao_ = 0;

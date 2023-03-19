@@ -101,20 +101,16 @@ class GLKitApp : public ImGuiApp {
     ImGui::Begin("Camera");
 
     Vec3 position = camera_.position();
-    ImGui::InputFloat("PositionX", &position.x, 1.f, 10.f, "%.1f");
-    ImGui::InputFloat("PositionY", &position.y, 1.f, 10.f, "%.1f");
-    ImGui::InputFloat("PositionZ", &position.z, 1.f, 10.f, "%.1f");
+    ImGui::InputFloat("PX", &position.x, 1.f, 10.f, "%.1f");
+    ImGui::InputFloat("PY", &position.y, 1.f, 10.f, "%.1f");
+    ImGui::InputFloat("PZ", &position.z, 1.f, 10.f, "%.1f");
     camera_.set_position(position);
 
-    float pitch = camera_.pitch() / PI * 180.f;
-    ImGui::InputFloat("Pitch(X)", &pitch, 1.f, 10.f, "%.1f");
-    pitch = std::max(std::min(pitch, 90.f), -90.f);
-    camera_.set_pitch(pitch / 180.f * PI);
-    float yaw = camera_.yaw() / PI * 180.f;
-    ImGui::InputFloat("Yaw(Y)", &yaw, 1.f, 10.f, "%.1f");
-    if (yaw < -180.f) yaw += 360.f;
-    if (yaw > 180.f) yaw -= 360.f;
-    camera_.set_yaw(yaw / 180.f * PI);
+    Vec3 rotation = camera_.rotation() / PI * 180.f;
+    ImGui::InputFloat("RX(Pitch)", &rotation.x, 1.f, 10.f, "%.1f");
+    ImGui::InputFloat("RY(Yaw)", &rotation.y, 1.f, 10.f, "%.1f");
+    ImGui::InputFloat("RZ(Roll)", &rotation.z, 1.f, 10.f, "%.1f");
+    camera_.set_rotation(rotation / 180.f * PI);
 
     float fovy = camera_.fovy() / PI * 180.f;
     ImGui::InputFloat("FovY", &fovy, 1.f, 10.f, "%.1f");
@@ -130,23 +126,36 @@ class GLKitApp : public ImGuiApp {
     camera_.set_far(far);
 
     if (ImGui::TreeNode("Direction")) {
-      const Vec3& f = camera_.front();
       const Vec3& r = camera_.right();
       const Vec3& u = camera_.up();
-      ImGui::Text("Front(-Z): %6.3f %6.3f %6.3f", f.x, f.y, f.z);
-      ImGui::Text("Right(+X): %6.3f %6.3f %6.3f", r.x, r.y, r.z);
-      ImGui::Text("   Up(+Y): %6.3f %6.3f %6.3f", u.x, u.y, u.z);
+      const Vec3& f = camera_.forward();
+      const Vec3& c = camera_.center();
+      ImGui::Text("  Right(+X): %6.3f %6.3f %6.3f", r.x, r.y, r.z);
+      ImGui::Text("     Up(+Y): %6.3f %6.3f %6.3f", u.x, u.y, u.z);
+      ImGui::Text("Forward(-Z): %6.3f %6.3f %6.3f", f.x, f.y, f.z);
+      ImGui::Text("  Center(O): %6.3f %6.3f %6.3f", c.x, c.y, c.z);
       ImGui::TreePop();
     }
 
+    const Mat4& view_mat = camera_.view_mat();
     if (ImGui::TreeNode("View Matrix")) {
-      const Mat4& view_mat = camera_.view_mat();
       for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 3; j++) {
           ImGui::Text("%6.3f", view_mat[j][i]);
           ImGui::SameLine();
         }
         ImGui::Text("%6.3f", view_mat[3][i]);
+      }
+      ImGui::TreePop();
+    }
+    Mat4 view_mat_inv = glm::inverse(view_mat);
+    if (ImGui::TreeNode("View Matrix Inverse")) {
+      for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 3; j++) {
+          ImGui::Text("%6.3f", view_mat_inv[j][i]);
+          ImGui::SameLine();
+        }
+        ImGui::Text("%6.3f", view_mat_inv[3][i]);
       }
       ImGui::TreePop();
     }
@@ -167,32 +176,25 @@ class GLKitApp : public ImGuiApp {
 
     const auto& io = ImGui::GetIO();
     if (io.MouseWheel != 0.f) {
-      camera_.MoveFront(io.MouseWheel);
+      camera_.MoveForward(io.MouseWheel);
     }
-    // 图像移动方向与相机移动方向相反
     if (ImGui::IsKeyDown(ImGuiKey_A)) {
-      camera_.MoveRight(0.1f);
+      camera_.RotateAround(Vec3(0.f, 0.f, -1.f / 180.f * PI));
     }
     if (ImGui::IsKeyDown(ImGuiKey_D)) {
-      camera_.MoveRight(-0.1f);
+      camera_.RotateAround(Vec3(0.f, 0.f, 1.f / 180.f * PI));
     }
     if (ImGui::IsKeyDown(ImGuiKey_W)) {
-      camera_.MoveUp(-0.1f);
+      camera_.RotateAround(Vec3(-1.0f / 180.f * PI, 0.f, 0.f));
     }
     if (ImGui::IsKeyDown(ImGuiKey_S)) {
-      camera_.MoveUp(0.1f);
+      camera_.RotateAround(Vec3(1.0f / 180.f * PI, 0.f, 0.f));
     }
     if (ImGui::IsKeyDown(ImGuiKey_Q)) {
-      camera_.TurnRight(1.f / 180.f * PI);
+      camera_.RotateAround(Vec3(0.f, -1.0f / 180.f * PI, 0.f));
     }
     if (ImGui::IsKeyDown(ImGuiKey_E)) {
-      camera_.TurnLeft(1.f / 180.f * PI);
-    }
-    if (ImGui::IsKeyDown(ImGuiKey_2)) {
-      camera_.TurnDown(1.f / 180.f * PI);
-    }
-    if (ImGui::IsKeyDown(ImGuiKey_X)) {
-      camera_.TurnUp(1.f / 180.f * PI);
+      camera_.RotateAround(Vec3(0.f, 1.0f / 180.f * PI, 0.f));
     }
   }
 

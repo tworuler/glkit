@@ -117,6 +117,7 @@ const float PI = static_cast<float>(acos(-1.0));
 #ifdef GLKIT_USE_GLM
 using Vec2 = glm::vec2;
 using Vec3 = glm::vec3;
+using Vec4 = glm::vec4;
 using Mat4 = glm::mat4;
 #endif  // GLKIT_USE_GLM
 

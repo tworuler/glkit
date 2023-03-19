@@ -133,6 +133,8 @@ class Mesh {
     }
   }
 
+  ~Mesh() { Free(); }
+
  private:
   std::vector<Vertex> vertices_;
   std::vector<GLuint> indices_;
