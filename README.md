@@ -1,6 +1,6 @@
-# glkit
+# GLKit
 
-This library implements a simple 3D viewer using OpenGL and ImGui for UI. It can be used to visualize 3D models and camera matrices,  which is useful for understanding how they work.
+This library implements a simple 3D viewer using OpenGL and ImGui. It can be used to visualize 3D models and camera matrices,  which is useful for understanding how they work.
 
 ## Build and Run
 
@@ -10,4 +10,14 @@ To begin, go to the `third_party` directory and follow the instructions in the [
 
 Use the `A`, `D`, `W`, `S`, `Q`, `E` keys to control the camera rotation around the center of the scene.
 
+### Lightting Mode
+
+visualize object lighting
+
 ![](https://raw.githubusercontent.com/tworuler/doc-files/master/glkit/glkit_demo.png)
+
+### Depth Mode
+
+visulize object depth
+
+![](https://raw.githubusercontent.com/tworuler/doc-files/master/glkit/glkit_demo_depth.png)

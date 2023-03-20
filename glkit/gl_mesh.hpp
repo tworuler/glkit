@@ -74,7 +74,7 @@ class Mesh {
         std::vector<GLuint> face;
         std::string index;
         while (ss >> index) {
-          int pos = index.find('/');
+          size_t pos = index.find('/');
           int idx = std::stoi(index.substr(0, pos));
           face.push_back(idx - 1);
         }
@@ -111,7 +111,7 @@ class Mesh {
     }
 
     glBindVertexArray(vao_);
-    glDrawElements(GL_TRIANGLES, indices_.size(), GL_UNSIGNED_INT,
+    glDrawElements(GL_TRIANGLES, (int)indices_.size(), GL_UNSIGNED_INT,
                    static_cast<void*>(0));
     glBindVertexArray(0);
     RETURN_IF_GL_ERROR(-1, "Failed to draw mesh");

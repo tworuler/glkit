@@ -6,6 +6,11 @@
 
 namespace glkit {
 
+enum RenderMode {
+  kRenderModeLight = 0,
+  kRenderModeDepth = 1,
+};
+
 class Model {
  public:
   Model() = default;
@@ -25,6 +30,11 @@ class Model {
     const auto& model = GetModelMatrix();
     shader_->SetMat4("model", model);
     shader_->SetVec3("color", color_);
+    if (!is_light_) {
+      shader_->SetInt("render_mode", render_mode_);
+      shader_->SetFloat("near", near_);
+      shader_->SetFloat("far", far_);
+    }
     mesh_->Draw(shader_);
     return 0;
   }
@@ -59,6 +69,12 @@ class Model {
   Vec3 color() const { return color_; }
   void set_color(const Vec3& color) { color_ = color; }
 
+  RenderMode render_mode() const { return render_mode_; }
+  void set_render_mode(RenderMode render_mode) { render_mode_ = render_mode; }
+
+  void set_near(float near) { near_ = near; }
+  void set_far(float far) { far_ = far; }
+
  private:
   Mesh* mesh_ = nullptr;
   Shader* shader_ = nullptr;
@@ -68,6 +84,10 @@ class Model {
 
   bool is_light_ = false;
   Vec3 color_ = Vec3(1.0f, 1.0f, 1.0f);
+
+  RenderMode render_mode_ = kRenderModeLight;
+  float near_;
+  float far_;
 };
 
 }  // namespace glkit

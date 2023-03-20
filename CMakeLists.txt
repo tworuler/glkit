@@ -3,7 +3,9 @@ cmake_minimum_required(VERSION 3.10)
 project(glkit)
 
 set(CMAKE_CXX_STANDARD 11)
-add_compile_options(-Wall)
+if (UNIX)
+    add_compile_options(-Wall)
+endif()
 
 include_directories(${PROJECT_SOURCE_DIR})
 include_directories(${PROJECT_SOURCE_DIR}/third_party)
@@ -14,8 +16,13 @@ include_directories(${PROJECT_SOURCE_DIR}/third_party/glm)
 include_directories(${PROJECT_SOURCE_DIR}/third_party/cppbase)
 
 if (MSVC)
-add_subdirectory(${PROJECT_SOURCE_DIR}/third_party/glad)
+    add_subdirectory(${PROJECT_SOURCE_DIR}/third_party/glad)
 endif()
+
+set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+set(GLFW_INSTALL OFF CACHE BOOL "" FORCE)
 add_subdirectory(${PROJECT_SOURCE_DIR}/third_party/glfw)
 
 file(GLOB IMGUI_SRCS ${PROJECT_SOURCE_DIR}/third_party/imgui/*.cpp)

@@ -30,16 +30,28 @@ class Camera {
   }
 
   float fovy() const { return fovy_; }
-  void set_fovy(float fovy) { fovy_ = fovy; }
+  void set_fovy(float fovy) {
+    UpdateProjectionMat();
+    fovy_ = fovy;
+  }
 
   float aspect() const { return aspect_; }
-  void set_aspect(float aspect) { aspect_ = aspect; }
+  void set_aspect(float aspect) {
+    UpdateProjectionMat();
+    aspect_ = aspect;
+  }
 
   float near() const { return near_; }
-  void set_near(float near) { near_ = near; }
+  void set_near(float near) {
+    UpdateProjectionMat();
+    near_ = near;
+  }
 
   float far() const { return far_; }
-  void set_far(float far) { far_ = far; }
+  void set_far(float far) {
+    UpdateProjectionMat();
+    far_ = far;
+  }
 
   Vec3 right() const {
     return Vec3(view_mat_[0][0], view_mat_[1][0], view_mat_[2][0]);

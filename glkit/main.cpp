@@ -14,10 +14,10 @@ namespace glkit {
 
 class GLKitApp : public ImGuiApp {
  public:
-  int Init(int width = 1920, int height = 1080,
+  int Init(int width = 1280, int height = 720,
            const char* name = "GLKit") override {
     ImGuiApp::Init(width, height, name);
-    clear_color_ = ImVec4(0.23, 0.23, 0.23, 1);
+    clear_color_ = ImVec4(0.23f, 0.23f, 0.23f, 1.0f);
 
     auto cube_mesh =
         mesh_manager_.AddMeshFromObjFile("cube", "objects/cube.obj");
@@ -93,6 +93,7 @@ class GLKitApp : public ImGuiApp {
 
     if (show_demo_window_) ImGui::ShowDemoWindow(&show_demo_window_);
     if (show_camera_) UiAddCamera();
+    UiAddCameraControl();
     if (show_light_) UiAddModel("Light", &light_);
     if (show_cube_) UiAddModel("Cube", &cube_);
     if (show_sphere_) UiAddModel("Sphere", &sphere_);
@@ -175,7 +176,9 @@ class GLKitApp : public ImGuiApp {
     }
 
     ImGui::End();
+  }
 
+  void UiAddCameraControl() {
     const auto& io = ImGui::GetIO();
     if (io.MouseWheel != 0.f) {
       camera_.MoveForward(io.MouseWheel);
@@ -202,6 +205,11 @@ class GLKitApp : public ImGuiApp {
 
   void UiAddModel(const char* name, Model* model) {
     ImGui::Begin(name);
+    int render_mode = model->render_mode();
+    ImGui::InputInt("Render Mode: 0:Light 1:Depth", &render_mode);
+    model->set_render_mode(static_cast<RenderMode>(render_mode));
+    model->set_near(camera_.near());
+    model->set_far(camera_.far());
     Vec3 color = model->color();
     ImGui::ColorEdit3("Color", &color.x);
     model->set_color(color);
@@ -221,6 +229,33 @@ class GLKitApp : public ImGuiApp {
     ImGui::InputFloat("SZ", &scale.z, 0.1f, 1.f, "%.1f");
     model->set_scale(scale);
 
+    const Mat4& model_mat = model->GetModelMatrix();
+    Mat4 view_mat = camera_.view_mat();
+    Vec4 view_pos = view_mat * Vec4(position, 1.0);
+    Mat4 mv_mat = view_mat * model_mat;
+    if (ImGui::TreeNode("View Coordinate")) {
+      ImGui::Text("Pos: %6.3f %6.3f %6.3f %6.3f", view_pos.x, view_pos.y,
+                  view_pos.z, view_pos.w);
+      Vec3 view_angle;
+      glm::extractEulerAngleXYX(mv_mat, view_angle.x, view_angle.y,
+                                view_angle.z);
+      ImGui::Text("Rot: %6.1f %6.1f %6.1f", view_angle.x / PI * 180.f,
+                  view_angle.y / PI * 180.f, view_angle.z / PI * 180.f);
+      ImGui::TreePop();
+    }
+
+    const Mat4& proj_mat = camera_.projection_mat();
+    Vec4 proj_pos = proj_mat * view_pos;
+    Mat4 mvp_mat = proj_mat * mv_mat;
+    if (ImGui::TreeNode("Projection Coordinate")) {
+      ImGui::Text(" Pos: %6.3f %6.3f %6.3f %6.3f", proj_pos.x, proj_pos.y,
+                  proj_pos.z, proj_pos.w);
+      Vec4 normal_pos = proj_pos / proj_pos.w;
+      ImGui::Text("NPos: %6.3f %6.3f %6.3f %6.3f", normal_pos.x, normal_pos.y,
+                  normal_pos.z, normal_pos.w);
+      ImGui::TreePop();
+    }
+
     if (ImGui::TreeNode("Model Matrix")) {
       const Mat4& model_mat = model->GetModelMatrix();
       for (int i = 0; i < 4; i++) {
@@ -229,6 +264,28 @@ class GLKitApp : public ImGuiApp {
           ImGui::SameLine();
         }
         ImGui::Text("%6.3f", model_mat[3][i]);
+      }
+      ImGui::TreePop();
+    }
+
+    if (ImGui::TreeNode("MV Matrix")) {
+      for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 3; j++) {
+          ImGui::Text("%6.3f", mv_mat[j][i]);
+          ImGui::SameLine();
+        }
+        ImGui::Text("%6.3f", mv_mat[3][i]);
+      }
+      ImGui::TreePop();
+    }
+
+    if (ImGui::TreeNode("MVP Matrix")) {
+      for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 3; j++) {
+          ImGui::Text("%6.3f", mvp_mat[j][i]);
+          ImGui::SameLine();
+        }
+        ImGui::Text("%6.3f", mvp_mat[3][i]);
       }
       ImGui::TreePop();
     }
